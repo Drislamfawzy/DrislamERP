@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Drislam</title>
+    
+    <!-- إعدادات PWA والأندرويد -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- إعدادات الآيفون (iOS Safari PWA) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Drislam">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2821/2821812.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2821/2821812.png">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        /* شاشة التحميل المبدئية (Splash Loader) */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+        }
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* إطار عرض النظام بملء الشاشة مع قص شريط تحذير جوجل العلوي */
+        .iframe-container {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: calc(100% + 40px);
+            margin-top: -40px; /* يخفي شريط جوجل الرمادي العلوي تماماً */
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <h2 style="font-weight: 800; letter-spacing: 1px;">Drislam ERP</h2>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 6px;">جاري تحميل النظام...</p>
+    </div>
+
+    <div class="iframe-container">
+        <iframe id="erpFrame" allow="geolocation; microphone; camera; clipboard-read; clipboard-write"></iframe>
+    </div>
+
+    <script>
+        // ضع رابط التطبيق النهائي (الذي ينتهي بـ /exec) هنا بين علامتي التنصيص:
+        const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec";
+
+        const frame = document.getElementById('erpFrame');
+        const loader = document.getElementById('loader');
+
+        frame.src = GAS_EXEC_URL;
+
+        frame.addEventListener('load', () => {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 400);
+        });
+
+        // تسجيل الـ Service Worker لتفعيل ميزة التسطيب في جوجل كروم
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
