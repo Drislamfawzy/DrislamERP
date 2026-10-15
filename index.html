@@ -48,6 +48,12 @@
             border-radius: 4px;
         }
     </style>
+    <!-- منع فتح التطبيق داخل أي Iframe أو Sandbox خارجي قد يتسبب في الخروج -->
+    <script>
+        if (window.self !== window.top) {
+            window.top.location.href = window.self.location.href;
+        }
+    </script>
 </head>
 <body>
 
@@ -140,7 +146,6 @@
                 
                 const textData = await response.text();
                 
-                // حماية قاطعة: إذا بدأ الرد بـ HTML (يعني توجيه من جوجل)، امنع تنفيذه فوراً
                 if (textData.trim().toLowerCase().startsWith("<!doctype") || textData.trim().toLowerCase().startsWith("<html")) {
                     console.error("Blocked Google Auth/Redirect HTML response.");
                     return { status: "error", message: "جلسة العمل تتطلب صلاحية" };
