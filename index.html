@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Drislam</title>
+    <title>Drislam ERP</title>
     
     <!-- إعدادات PWA والأندرويد -->
     <link rel="manifest" href="manifest.json">
@@ -81,11 +81,12 @@
     </div>
 
     <div class="iframe-container">
+        <!-- تم إضافة sandbox بالصلاحيات الكاملة لضمان عمل النماذج والسكريبتات داخلياً دون شاشة زرقاء -->
         <iframe id="erpFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads" allow="geolocation; microphone; camera; clipboard-read; clipboard-write"></iframe>
     </div>
 
     <script>
-        // ضع رابط التطبيق النهائي (الذي ينتهي بـ /exec) هنا بين علامتي التنصيص:
+        // ضع رابط الـ Web App الخاص بك هنا (نفس الرابط الثابت للإصدار الحالي)
         const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec";
 
         const frame = document.getElementById('erpFrame');
@@ -99,13 +100,6 @@
                 loader.style.display = 'none';
             }, 400);
         });
-
-        // تسجيل الـ Service Worker لتفعيل ميزة التسطيب في جوجل كروم
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
-            });
-        }
     </script>
 </body>
 </html>
