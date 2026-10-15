@@ -13,24 +13,23 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
     </style>
-    <!-- حماية قاطعة لمنع فتح الصفحة داخل أي إطار خارجي -->
-    <script>
-        if (window.self !== window.top) {
-            window.top.location.href = window.self.location.href;
-        }
-    </script>
 </head>
 <body>
 
     <div class="container-fluid py-3" id="app">
-        <!-- شريط التنقل العلوي -->
+        <!-- شريط التنقل العلوي الآمن محلياً -->
         <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn text-white fw-bold p-0 border-0 bg-transparent" onclick="switchView('home-view')">
+            <button type="button" class="btn text-white fw-bold p-0 border-0 bg-transparent" onclick="localNavigate('home-view')">
                 <i class="fas fa-industry ms-2"></i> نظام إدارة المصنع - ERP
             </button>
-            <button type="button" class="btn btn-outline-light btn-sm" onclick="loadData()">
-                <i class="fas fa-sync-alt"></i>
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="localNavigate('other-view')">
+                    <i class="fas fa-list"></i>
+                </button>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="loadData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
         </nav>
 
         <!-- واجهة الرئيسية -->
@@ -39,71 +38,46 @@
             <div class="row g-3">
                 <div class="col-6">
                     <div class="p-3 bg-light rounded-3 border text-center">
-                        <span class="text-muted small">إجمالي الإنتاج</span>
-                        <h3 class="fw-bold text-primary mb-0" id="prod-val">--</h3>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="p-3 bg-light rounded-3 border text-center">
-                        <span class="text-muted small">كفاءة OEE</span>
-                        <h3 class="fw-bold text-success mb-0" id="oee-val">--</h3>
+                        <span class="text-muted small">حالة النظام</span>
+                        <h5 class="fw-bold text-success mb-0">متصل محلياً</h5>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- واجهة أخرى للتنقل المحلي -->
+        <!-- واجهة فرعية للتنقل -->
         <div id="other-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
-            <h4 class="text-secondary mb-3">تفاصيل العمليات</h4>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('home-view')">
+            <h4 class="text-secondary mb-3">العمليات</h4>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="localNavigate('home-view')">
                 <i class="fas fa-home ms-1"></i> العودة للرئيسية
             </button>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec";
-
-        // دالة الاتصال الخلفي الصامت
-        async function callBackend(action) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: action }),
-                    redirect: "error" // يمنع المتصفح من اتباع أي توجيه خارجي نهائياً
-                });
-                const text = await response.text();
-                return JSON.parse(text);
-            } catch (e) {
-                console.error("Fetch error:", e);
-                return null;
+        // التنقل المحلي المحض داخل جيت هاب (ممنوع منعاً باتاً فتح أي رابط خارجي)
+        function localNavigate(viewId) {
+            document.querySelectorAll('.view-section').forEach(function(section) {
+                section.classList.remove('active');
+            });
+            var target = document.getElementById(viewId);
+            if (target) {
+                target.classList.add('active');
             }
         }
 
-        // التنقل المحلي البحت عبر إخفاء وإظهار أقسام الـ HTML بدون مغادرة الصفحة
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+        function loadData() {
+            // يمكن وضع استدعاء الـ fetch هنا لاحقاً إذا أردت جلب بيانات صامتة
+            console.log("Local refresh triggered");
         }
 
-        async function loadData() {
-            // مثال على جلب البيانات بدون مغادرة جيت هاب
-            const res = await callBackend("getDashboardData");
-            if (res && res.status === "success" && res.data) {
-                document.getElementById('prod-val').innerText = res.data.todayTransactions || "0";
-            }
-        }
-
-        // منع أي نقرة عشوائية على أي رابط قد يخرج من النطاق
+        // حماية عامة تمنع أي رابط من تغيير مسار الصفحة إلى دومين خارجي
         document.addEventListener('click', function(e) {
-            let target = e.target.closest('a');
-            if (target) e.preventDefault();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-        });
+            var targetLink = e.target.closest('a');
+            if (targetLink) {
+                e.preventDefault();
+            }
+        }, true);
     </script>
 </body>
 </html>
