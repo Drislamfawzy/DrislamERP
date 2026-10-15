@@ -15,6 +15,8 @@
             font-family: system-ui, -apple-system, sans-serif;
             overflow-x: hidden;
             user-select: none;
+            margin: 0;
+            padding: 0;
         }
         .app-container {
             max-width: 100vw;
@@ -22,7 +24,6 @@
             display: flex;
             flex-direction: column;
         }
-        /* تحويل الشعار إلى زر تفاعلي نظيف بدون أي إيحاء برابط خارجي */
         .brand-btn {
             background: none;
             border: none;
@@ -32,6 +33,12 @@
             padding: 0;
             cursor: pointer;
             text-align: right;
+        }
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
         }
         ::-webkit-scrollbar {
             width: 4px;
@@ -45,54 +52,84 @@
 <body>
 
     <div class="app-container" id="app">
-        <!-- شاشة التحميل الأولية (Splash Screen) -->
-        <div id="splash-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-primary text-white">
+        <!-- شاشة التحميل الأولية -->
+        <div id="splash-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-primary text-white" style="position:fixed; top:0; left:0; width:100%; z-index:9999;">
             <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
             <h5 class="fw-bold">جاري تحميل نظام الـ ERP...</h5>
         </div>
 
-        <!-- المحتوى الرئيسي للتطبيق -->
+        <!-- المحتوى الرئيسي -->
         <div id="main-content" class="d-none flex-grow-1 p-3">
             <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3 d-flex justify-content-between align-items-center">
-                <!-- استخدام عنصر button بدلاً من رابط a لضمان عدم الخروج نهائياً -->
-                <button class="brand-btn" onclick="navigateTo('home')">
+                <button type="button" class="brand-btn" onclick="switchView('home-view')">
                     <i class="fas fa-boxes-stacked ms-2"></i> نظام الإدارة الشامل
                 </button>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-light btn-sm" onclick="navigateTo('transactions')" title="سجل الحركات">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="switchView('transactions-view')" title="سجل الحركات">
                         <i class="fas fa-list-ul"></i>
                     </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="loadERPData()" title="تحديث">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="loadERPData()" title="تحديث">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
             </nav>
 
-            <!-- منطقة العرض الديناميكي المحلية -->
-            <div id="dynamic-view" class="card border-0 shadow-sm p-3 rounded-4">
-                <!-- سيتم حقن البيانات هنا -->
+            <!-- 1. واجهة الرئيسية (موجودة دائماً في الـ DOM لتجنب أي إعادة توجيه) -->
+            <div id="home-view" class="view-section active card border-0 shadow-sm p-3 rounded-4">
+                <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="text-muted small">إجمالي المصروفات</span>
+                            <h3 class="fw-bold text-primary mb-0" id="total-expense">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="text-muted small">حركات اليوم</span>
+                            <h3 class="fw-bold text-success mb-0" id="today-trans">--</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="switchView('transactions-view')">
+                        <i class="fas fa-list ms-1"></i> استعراض سجل الحركات التفصيلي
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. واجهة الحركات (موجودة مسبقاً ولا يتم إعادة بناؤها) -->
+            <div id="transactions-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-secondary mb-0">سجل الحركات اليومية</h4>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('home-view')">
+                        <i class="fas fa-home ms-1"></i> الرئيسية
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>البيان</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <tr><td colspan="3" class="text-center text-muted py-4">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered!'))
-                    .catch(err => console.log('Service Worker registration failed', err));
-            });
-        }
-    </script>
-
-    <!-- الأكواد البرمجية للاتصال الخلفي وإدارة الواجهة -->
     <script>
         const CONFIG = {
             API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
         };
 
-        // دالة الاتصال الموحدة عبر fetch
+        // دالة الاتصال الآمنة
         async function callGAS(action, payload = {}) {
             try {
                 const response = await fetch(CONFIG.API_URL, {
@@ -100,112 +137,60 @@
                     headers: {
                         "Content-Type": "text/plain;charset=utf-8",
                     },
-                    body: JSON.stringify({ action: action, ...payload })
+                    body: JSON.stringify({ action: action, ...payload }),
+                    redirect: "error"
                 });
-
-                const result = await response.json();
-                return result;
+                const textData = await response.text();
+                return JSON.parse(textData);
             } catch (error) {
                 console.error("Communication Error:", error);
-                return { status: "error", message: "فشل الاتصال بالخادم الداخلي" };
+                return { status: "error", message: "فشل الاتصال بالخادم" };
             }
         }
 
-        // التنقل المحلي بالكامل داخل جيت هاب
-        function navigateTo(viewName) {
-            const viewDiv = document.getElementById('dynamic-view');
+        // التبديل بين الأقسام محلياً عبر CSS (بدون إعادة بناء أو تغيير عناصر DOM)
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
             
-            if (viewName === 'home') {
-                loadERPData();
-            } else if (viewName === 'transactions') {
-                viewDiv.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="text-secondary mb-0">سجل الحركات اليومية</h4>
-                        <button class="btn btn-secondary btn-sm" onclick="navigateTo('home')">
-                            <i class="fas fa-home ms-1"></i> الرئيسية
-                        </button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>البيان</th>
-                                    <th>المبلغ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactions-body">
-                                <tr><td colspan="3" class="text-center text-muted py-4">جاري تحميل السجل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+            if(viewId === 'transactions-view') {
                 fetchTransactionsFromGAS();
             }
         }
 
-        // جلب بيانات المؤشرات الرئيسية
+        // جلب البيانات وتحديث القيم مباشرة دون إعادة رسم الصفحة
         async function loadERPData() {
-            const viewDiv = document.getElementById('dynamic-view');
-            viewDiv.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="text-muted mt-2 small">جاري مزامنة البيانات...</p></div>`;
-            
             const res = await callGAS("getDashboardData");
-            
             if(res.status === "success" && res.data) {
-                viewDiv.innerHTML = `
-                    <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <span class="text-muted small">إجمالي المصروفات</span>
-                                <h3 class="fw-bold text-primary mb-0">${res.data.totalExpense}</h3>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <span class="text-muted small">حركات اليوم</span>
-                                <h3 class="fw-bold text-success mb-0">${res.data.todayTransactions}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-center">
-                        <button class="btn btn-outline-primary btn-sm w-100" onclick="navigateTo('transactions')">
-                            <i class="fas fa-list ms-1"></i> استعراض سجل الحركات التفصيلي
-                        </button>
-                    </div>
-                `;
-            } else {
-                viewDiv.innerHTML = `<div class="alert alert-danger text-center">تعذر جلب البيانات من الخادم. تأكد من اتصال الإنترنت.</div>`;
+                document.getElementById('total-expense').innerText = res.data.totalExpense || "0";
+                document.getElementById('today-trans').innerText = res.data.todayTransactions || "0";
             }
         }
 
-        // جلب سجل الحركات
         async function fetchTransactionsFromGAS() {
             const res = await callGAS("getTransactionsData");
             let tbody = document.getElementById('transactions-body');
             if(res.status === "success" && res.htmlRows) {
                 tbody.innerHTML = res.htmlRows;
             } else {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">لا توجد حركات مسجلة حالياً</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">لا توجد حركات مسجلة</td></tr>`;
             }
         }
 
-        // حماية شاملة: منع أي حدث انطلاق روابط عشوائية واعتراض أي ضغطة مغادرة
-        document.addEventListener('click', function(event) {
-            let target = event.target.closest('a');
-            if (target && target.getAttribute('href') && !target.getAttribute('href').startsWith('#') && !target.getAttribute('href').startsWith('javascript')) {
-                event.preventDefault();
-                console.warn("Blocked external link navigation to keep app inside GitHub Pages.");
+        // منع أي سلوك افتراضي لأي نقرة بالخطأ
+        document.addEventListener('click', function(e) {
+            if(e.target.tagName === 'A') {
+                e.preventDefault();
             }
         });
 
-        // تشغيل التطبيق عند اكتمال التحميل
+        // تشغيل التطبيق
         document.addEventListener('DOMContentLoaded', async () => {
-            setTimeout(async () => {
-                document.getElementById('splash-screen').classList.add('d-none');
+            await loadERPData();
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
                 document.getElementById('main-content').classList.remove('d-none');
-                await loadERPData();
-            }, 800);
+            }, 500);
         });
     </script>
 </body>
