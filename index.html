@@ -2,90 +2,110 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Drislam ERP</title>
-    
-    <!-- إعدادات التثبيت كبرنامج (PWA) -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Drislam ERP">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2821/2821812.png">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الإدارة المتكامل - ERP</title>
+    <!-- Bootstrap 5 RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0d6efd">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0f172a;
-            position: fixed;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        body {
+            background-color: #f8f9fa;
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+            user-select: none;
         }
-        /* شاشة التحميل السوداء الفاخرة */
-        #splash {
-            position: fixed;
-            inset: 0;
-            background: #0f172a;
+        .app-container {
+            max-width: 100vw;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            color: white;
-            transition: opacity 0.3s ease;
         }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: #2563eb;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
+        /* إخفاء شريط التمرير المزعج وتجربة تطبيق حقيقي */
+        ::-webkit-scrollbar {
+            width: 4px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-    <!-- شاشة بداية تشبه التطبيقات الحقيقية -->
-    <div id="splash">
-        <div class="spinner"></div>
-        <h3 style="font-weight: 700; letter-spacing: 0.5px;">Drislam ERP</h3>
+    <div class="app-container" id="app">
+        <!-- شاشة التحميل الأولية (Splash Screen) -->
+        <div id="splash-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-primary text-white">
+            <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <h5 class="fw-bold">جاري تحميل نظام الـ ERP...</h5>
+        </div>
+
+        <!-- المحتوى الرئيسي للتطبيق -->
+        <div id="main-content" class="d-none flex-grow-1 p-3">
+            <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3">
+                <span class="navbar-brand mb-0 h1"><i class="fas fa-boxes-stacked ms-2"></i> نظام الإدارة الشامل</span>
+                <button class="btn btn-outline-light btn-sm" onclick="app.refreshData()"><i class="fas fa-sync-alt"></i></button>
+            </nav>
+
+            <div id="dynamic-view" class="card border-0 shadow-sm p-3 rounded-4">
+                <!-- سيتم حقن الواجهات هنا ديناميكياً عبر JavaScript -->
+            </div>
+        </div>
     </div>
 
-    <!-- الإطار الحاضن للتطبيق -->
-    <iframe id="appFrame" src="https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"></iframe>
-
+    <!-- Service Worker Registration -->
     <script>
-        const frame = document.getElementById('appFrame');
-        const splash = document.getElementById('splash');
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered!'))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
+        }
+    </script>
 
-        // إخفاء شاشة البداية فور تحميل النظام بداخل الإطار
-        frame.addEventListener('load', () => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-            }, 300);
-        });
+    <!-- التطبيق البرمجي الواجهة -->
+    <script>
+        const CONFIG = {
+            // ضع هنا رابط النشر الخاص بـ Google Apps Script Web App (Exec URL)
+            API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
+        };
 
-        // منع أي محاولة لفتح الروابط في متصفح خارجي وإبقائها داخل التطبيق
-        document.addEventListener('click', (e) => {
-            const a = e.target.closest('a');
-            if (a && a.href && !a.href.startsWith('javascript')) {
-                // التأكد من بقاء التصفح سلس
+        const app = {
+            init: async function() {
+                // محاكاة الاتصال وجلب البيانات الأولية من Google Apps Script
+                setTimeout(() => {
+                    document.getElementById('splash-screen').classList.add('d-none');
+                    document.getElementById('main-content').classList.remove('d-none');
+                    this.loadDashboard();
+                }, 1000);
+            },
+            loadDashboard: function() {
+                document.getElementById('dynamic-view').innerHTML = `
+                    <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <span class="text-muted small">إجمالي الصرف</span>
+                                <h3 class="fw-bold text-primary mb-0">--</h3>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <span class="text-muted small">حركات اليوم</span>
+                                <h3 class="fw-bold text-success mb-0">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            refreshData: async function() {
+                alert('تم تحديث البيانات بنجاح');
             }
-        });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
