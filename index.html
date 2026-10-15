@@ -2,74 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Drislam ERP - System</title>
-    
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2821/2821812.png">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Drislam ERP</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #0f172a;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .card {
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 90%;
-        }
-        h2 {
-            font-weight: 800;
-            margin-bottom: 10px;
-            color: #38bdf8;
-        }
-        p {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-        }
-        .btn {
-            background-color: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background-color: #1d4ed8;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
     </style>
 </head>
 <body>
-
-    <div class="card">
-        <h2>Drislam ERP</h2>
-        <p>نظام إدارة الموارد المؤسسية جاهز للعمل بكامل الصلاحيات.</p>
-        <a id="erpLink" class="btn" href="#" target="_blank">دخول إلى النظام</a>
-    </div>
-
-    <script>
-        // رابط الـ Web App الثابت الخاص بك
-        const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec";
-        
-        document.getElementById('erpLink').href = GAS_EXEC_URL;
-
-        // اختياري: إذا أردت تحويله تلقائياً في تبويب جديد أو نفس التبويب بعد ثانيتين
-        // window.location.href = GAS_EXEC_URL;
-    </script>
+    <iframe id="erpFrame" src="https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"></iframe>
 </body>
 </html>
