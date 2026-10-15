@@ -1,3 +1,19 @@
+<script>
+    // صاعق منع الخروج: إذا تجسس المتصفح على أي محاولة انتقال لرابط جوجل، امنعها فوراً
+    (function() {
+        if (window.location.href.includes("script.google.com")) {
+            window.location.replace("./index.html");
+        }
+        
+        // مراقبة دائم لتاريخ المتصفح ومنع أي تلاعب بالروابط
+        window.addEventListener('popstate', function(event) {
+            if (window.location.href.includes("script.google.com")) {
+                window.history.pushState(null, "", "./index.html");
+                window.location.replace("./index.html");
+            }
+        });
+    })();
+</script>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
