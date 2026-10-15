@@ -52,7 +52,7 @@
 <body>
 
     <div class="app-container" id="app">
-        <!-- شاشة التحميل الأولية -->
+        <!-- شاشة التحميل -->
         <div id="splash-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-primary text-white" style="position:fixed; top:0; left:0; width:100%; z-index:9999;">
             <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
             <h5 class="fw-bold">جاري تحميل نظام الـ ERP...</h5>
@@ -74,7 +74,7 @@
                 </div>
             </nav>
 
-            <!-- 1. واجهة الرئيسية (موجودة دائماً في الـ DOM لتجنب أي إعادة توجيه) -->
+            <!-- واجهة الرئيسية -->
             <div id="home-view" class="view-section active card border-0 shadow-sm p-3 rounded-4">
                 <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
                 <div class="row g-3">
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            <!-- 2. واجهة الحركات (موجودة مسبقاً ولا يتم إعادة بناؤها) -->
+            <!-- واجهة الحركات -->
             <div id="transactions-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="text-secondary mb-0">سجل الحركات اليومية</h4>
@@ -129,41 +129,43 @@
             API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
         };
 
-        // دالة الاتصال الآمنة
         async function callGAS(action, payload = {}) {
             try {
                 const response = await fetch(CONFIG.API_URL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8",
-                    },
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ action: action, ...payload }),
                     redirect: "error"
                 });
+                
                 const textData = await response.text();
+                
+                // حماية قاطعة: إذا بدأ الرد بـ HTML (يعني توجيه من جوجل)، امنع تنفيذه فوراً
+                if (textData.trim().toLowerCase().startsWith("<!doctype") || textData.trim().toLowerCase().startsWith("<html")) {
+                    console.error("Blocked Google Auth/Redirect HTML response.");
+                    return { status: "error", message: "جلسة العمل تتطلب صلاحية" };
+                }
+                
                 return JSON.parse(textData);
             } catch (error) {
                 console.error("Communication Error:", error);
-                return { status: "error", message: "فشل الاتصال بالخادم" };
+                return { status: "error", message: "فشل الاتصال" };
             }
         }
 
-        // التبديل بين الأقسام محلياً عبر CSS (بدون إعادة بناء أو تغيير عناصر DOM)
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            
             if(viewId === 'transactions-view') {
                 fetchTransactionsFromGAS();
             }
         }
 
-        // جلب البيانات وتحديث القيم مباشرة دون إعادة رسم الصفحة
         async function loadERPData() {
             const res = await callGAS("getDashboardData");
             if(res.status === "success" && res.data) {
-                document.getElementById('total-expense').innerText = res.data.totalExpense || "0";
-                document.getElementById('today-trans').innerText = res.data.todayTransactions || "0";
+                document.getElementById('total-expense').innerText = res.data.totalExpense;
+                document.getElementById('today-trans').innerText = res.data.todayTransactions;
             }
         }
 
@@ -177,20 +179,12 @@
             }
         }
 
-        // منع أي سلوك افتراضي لأي نقرة بالخطأ
-        document.addEventListener('click', function(e) {
-            if(e.target.tagName === 'A') {
-                e.preventDefault();
-            }
-        });
-
-        // تشغيل التطبيق
         document.addEventListener('DOMContentLoaded', async () => {
             await loadERPData();
             setTimeout(() => {
                 document.getElementById('splash-screen').style.display = 'none';
                 document.getElementById('main-content').classList.remove('d-none');
-            }, 500);
+            }, 400);
         });
     </script>
 </body>
