@@ -2,54 +2,50 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIPI Factory ERP</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="theme-color" content="#0d6efd">
     <style>
         body { background-color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
+        .page { display: none; }
+        .page.active { display: block; }
     </style>
 </head>
-<body>
+<body class="p-3">
 
-    <div class="container-fluid py-3" id="app">
-        <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn text-white fw-bold p-0 border-0 bg-transparent" onclick="switchView('home-view')">
-                <i class="fas fa-industry ms-2"></i> نظام إدارة المصنع - ERP
-            </button>
-            <button type="button" class="btn btn-outline-light btn-sm" onclick="switchView('other-view')">
-                <i class="fas fa-list"></i> الحركات
-            </button>
-        </nav>
-
-        <div id="home-view" class="view-section active card border-0 shadow-sm p-3 rounded-4">
-            <h4 class="text-secondary mb-3">لوحة المؤشرات (وضع الاستقرار التام)</h4>
-            <div class="p-3 bg-light rounded-3 border text-center">
-                <h5 class="fw-bold text-success mb-0">التطبيق يعمل داخل جيت هاب بنجاح ولن يخرج أبدًا</h5>
-            </div>
+    <div class="container max-w-md">
+        <!-- شريط علوي -->
+        <div class="bg-primary text-white p-3 rounded-3 d-flex justify-content-between align-items-center mb-3 shadow-sm">
+            <h5 class="m-0 cursor-pointer" onclick="goToPage('home')"><i class="fas fa-industry ms-2"></i>نظام المصنع ERP</h5>
+            <button class="btn btn-light btn-sm" onclick="goToPage('details')"><i class="fas fa-bars"></i></button>
         </div>
 
-        <div id="other-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
-            <h4 class="text-secondary mb-3">سجل العمليات المحلي</h4>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('home-view')">
-                <i class="fas fa-home ms-1"></i> العودة للرئيسية
-            </button>
+        <!-- الصفحة الرئيسية -->
+        <div id="page-home" class="page active card p-4 shadow-sm border-0 rounded-4">
+            <h4>الصفحة الرئيسية</h4>
+            <p class="text-muted">هذا العرض يعمل محلياً بالكامل ولن يخرج لأي رابط خارجي.</p>
+            <button class="btn btn-primary w-100 mt-3" onclick="goToPage('details')">الانتقال لتفاصيل الحركات</button>
+        </div>
+
+        <!-- صفحة التفاصيل -->
+        <div id="page-details" class="page card p-4 shadow-sm border-0 rounded-4">
+            <h4>سجل الحركات</h4>
+            <p class="text-muted">هنا يتم عرض البيانات.</p>
+            <button class="btn btn-secondary w-100 mt-3" onclick="goToPage('home')">العودة للرئيسية</button>
         </div>
     </div>
 
     <script>
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(function(section) {
-                section.classList.remove('active');
-            });
-            var target = document.getElementById(viewId);
-            if (target) {
-                target.classList.add('active');
-            }
+        // نظام التنقل المحلي الخالص البحت (يستحيل أن يخرج أو يغير الرابط)
+        function goToPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            window.scrollTo(0, 0);
         }
+
+        // إلغاء أي سلوك قد يفسره المتصفح كرابط خارجي
+        window.onbeforeunload = null;
     </script>
 </body>
 </html>
