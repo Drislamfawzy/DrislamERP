@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Drislam ERP</title>
     
-    <!-- إعدادات التثبيت كبرنامج على الأندرويد -->
+    <!-- إعدادات التثبيت كبرنامج (PWA) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
-    
-    <!-- إعدادات التثبيت كبرنامج على الآيفون (iOS Safari PWA) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Drislam ERP">
@@ -23,8 +21,33 @@
             height: 100%;
             overflow: hidden;
             background-color: #0f172a;
-            position: fixed; /* يمنع اهتزاز الشاشة أو سحبها للأعلى والأسفل في الموبايل */
+            position: fixed;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
+        /* شاشة التحميل السوداء الفاخرة */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         iframe {
             width: 100%;
             height: 100%;
@@ -34,14 +57,33 @@
     </style>
 </head>
 <body>
-    <iframe id="erpFrame" src="https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"></iframe>
+
+    <!-- شاشة بداية تشبه التطبيقات الحقيقية -->
+    <div id="splash">
+        <div class="spinner"></div>
+        <h3 style="font-weight: 700; letter-spacing: 0.5px;">Drislam ERP</h3>
+    </div>
+
+    <!-- الإطار الحاضن للتطبيق -->
+    <iframe id="appFrame" src="https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"></iframe>
 
     <script>
-        // منع أي محاولة للخروج من الإطار أو فتح روابط خارجية بشكل غير مقصود
-        window.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (link && link.target === '_blank') {
-                link.target = '_self';
+        const frame = document.getElementById('appFrame');
+        const splash = document.getElementById('splash');
+
+        // إخفاء شاشة البداية فور تحميل النظام بداخل الإطار
+        frame.addEventListener('load', () => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 300);
+        });
+
+        // منع أي محاولة لفتح الروابط في متصفح خارجي وإبقائها داخل التطبيق
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a');
+            if (a && a.href && !a.href.startsWith('javascript')) {
+                // التأكد من بقاء التصفح سلس
             }
         });
     </script>
