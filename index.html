@@ -22,7 +22,6 @@
             display: flex;
             flex-direction: column;
         }
-        /* إخفاء شريط التمرير المزعج وتجربة تطبيق حقيقي */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -41,15 +40,25 @@
             <h5 class="fw-bold">جاري تحميل نظام الـ ERP...</h5>
         </div>
 
-        <!-- المحتوى الرئيسي للتطبيق -->
+        <!-- المحتوى الرئيسي للتطبيق (يبقي المستخدم داخل جيت هاب تماماً) -->
         <div id="main-content" class="d-none flex-grow-1 p-3">
             <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3">
-                <span class="navbar-brand mb-0 h1"><i class="fas fa-boxes-stacked ms-2"></i> نظام الإدارة الشامل</span>
-                <button class="btn btn-outline-light btn-sm" onclick="app.refreshData()"><i class="fas fa-sync-alt"></i></button>
+                <a class="navbar-brand mb-0 h1 text-decoration-none" href="javascript:void(0);" onclick="navigateTo('home')">
+                    <i class="fas fa-boxes-stacked ms-2"></i> نظام الإدارة الشامل
+                </a>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" onclick="navigateTo('transactions')" title="سجل الحركات">
+                        <i class="fas fa-list-ul"></i>
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="loadERPData()" title="تحديث">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </nav>
 
+            <!-- منطقة العرض الديناميكي (تتغير محلياً دون أي خروج للرابط) -->
             <div id="dynamic-view" class="card border-0 shadow-sm p-3 rounded-4">
-                <!-- سيتم حقن الواجهات هنا ديناميكياً عبر JavaScript -->
+                <!-- سيتم حقن الواجهات والبيانات هنا -->
             </div>
         </div>
     </div>
@@ -65,46 +74,118 @@
         }
     </script>
 
-    <!-- التطبيق البرمجي الواجهة -->
+    <!-- الأكواد البرمجية للاتصال الخلفي وإدارة الواجهة -->
     <script>
         const CONFIG = {
-    // رابط الـ Web App الخاص بك في جوجل سكريبت
-    API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
-};
+            API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
+        };
 
-// دالة الاتصال الموحدة والآمنة (لا تغادر جيت هاب أبداً)
-async function callGAS(action, payload = {}) {
-    try {
-        const response = await fetch(CONFIG.API_URL, {
-            method: "POST",
-            // استخدام text/plain ضروري جداً مع جوجل سكريبت لمنع طلبات الـ OPTIONS المعقدة وكسر الـ CORS
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8",
-            },
-            body: JSON.stringify({ action: action, ...payload })
+        // دالة الاتصال الموحدة والآمنة عبر fetch
+        async function callGAS(action, payload = {}) {
+            try {
+                const response = await fetch(CONFIG.API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                    },
+                    body: JSON.stringify({ action: action, ...payload })
+                });
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error("Communication Error:", error);
+                return { status: "error", message: "فشل الاتصال بالخادم الداخلي" };
+            }
+        }
+
+        // التنقل المحلي بين الشاشات دون مغادرة جيت هاب أبداً
+        function navigateTo(viewName) {
+            const viewDiv = document.getElementById('dynamic-view');
+            
+            if (viewName === 'home') {
+                loadERPData();
+            } else if (viewName === 'transactions') {
+                viewDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="text-secondary mb-0">سجل الحركات اليومية</h4>
+                        <button class="btn btn-secondary btn-sm" onclick="navigateTo('home')">
+                            <i class="fas fa-home ms-1"></i> الرئيسية
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>البيان</th>
+                                    <th>المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-body">
+                                <tr><td colspan="3" class="text-center text-muted py-4">جاري تحميل السجل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                fetchTransactionsFromGAS();
+            }
+        }
+
+        // جلب بيانات لوحة المؤشرات الرئيسية
+        async function loadERPData() {
+            const viewDiv = document.getElementById('dynamic-view');
+            viewDiv.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="text-muted mt-2 small">جاري مزامنة البيانات...</p></div>`;
+            
+            const res = await callGAS("getDashboardData");
+            
+            if(res.status === "success" && res.data) {
+                viewDiv.innerHTML = `
+                    <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <span class="text-muted small">إجمالي المصروفات</span>
+                                <h3 class="fw-bold text-primary mb-0">${res.data.totalExpense}</h3>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <span class="text-muted small">حركات اليوم</span>
+                                <h3 class="fw-bold text-success mb-0">${res.data.todayTransactions}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="navigateTo('transactions')">
+                            <i class="fas fa-list ms-1"></i> استعراض سجل الحركات التفصيلي
+                        </button>
+                    </div>
+                `;
+            } else {
+                viewDiv.innerHTML = `<div class="alert alert-danger text-center">تعذر جلب البيانات من الخادم. تأكد من اتصال الإنترنت.</div>`;
+            }
+        }
+
+        // جلب بيانات الحركات في الخلفية
+        async function fetchTransactionsFromGAS() {
+            const res = await callGAS("getTransactionsData");
+            let tbody = document.getElementById('transactions-body');
+            if(res.status === "success" && res.htmlRows) {
+                tbody.innerHTML = res.htmlRows;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">لا توجد حركات مسجلة حالياً</td></tr>`;
+            }
+        }
+
+        // تشغيل التطبيق عند اكتمال التحميل
+        document.addEventListener('DOMContentLoaded', async () => {
+            setTimeout(async () => {
+                document.getElementById('splash-screen').classList.add('d-none');
+                document.getElementById('main-content').classList.remove('d-none');
+                await loadERPData();
+            }, 800);
         });
-
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error("Communication Error:", error);
-        return { status: "error", message: "فشل الاتصال بالخادم الداخلي" };
-    }
-}
-
-// مثال على جلب أو إرسال بيانات من واجهة الجيت هاب بسلاسة تامة:
-async function loadERPData() {
-    // إظهار مؤشر تحميل محلي داخل الصفحة دون إعادة تحميل
-    document.getElementById('dynamic-view').innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
-    
-    const res = await callGAS("getDashboardData");
-    
-    if(res.status === "success") {
-        // تحديث الواجهة محلياً
-        renderView(res.data);
-    }
-}
-        document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
