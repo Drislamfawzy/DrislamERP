@@ -3,52 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الإدارة المتكامل - ERP</title>
-    <!-- Bootstrap 5 RTL CSS -->
+    <title>EIPI Factory ERP</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0d6efd">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: system-ui, -apple-system, sans-serif;
-            overflow-x: hidden;
-            user-select: none;
-            margin: 0;
-            padding: 0;
-        }
-        .app-container {
-            max-width: 100vw;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .brand-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: bold;
-            padding: 0;
-            cursor: pointer;
-            text-align: right;
-        }
-        .view-section {
-            display: none;
-        }
-        .view-section.active {
-            display: block;
-        }
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        body { background-color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
     </style>
-    <!-- منع فتح التطبيق داخل أي Iframe أو Sandbox خارجي قد يتسبب في الخروج -->
+    <!-- حماية قاطعة لمنع فتح الصفحة داخل أي إطار خارجي -->
     <script>
         if (window.self !== window.top) {
             window.top.location.href = window.self.location.href;
@@ -57,139 +22,87 @@
 </head>
 <body>
 
-    <div class="app-container" id="app">
-        <!-- شاشة التحميل -->
-        <div id="splash-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-primary text-white" style="position:fixed; top:0; left:0; width:100%; z-index:9999;">
-            <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-            <h5 class="fw-bold">جاري تحميل نظام الـ ERP...</h5>
+    <div class="container-fluid py-3" id="app">
+        <!-- شريط التنقل العلوي -->
+        <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3 d-flex justify-content-between align-items-center">
+            <button type="button" class="btn text-white fw-bold p-0 border-0 bg-transparent" onclick="switchView('home-view')">
+                <i class="fas fa-industry ms-2"></i> نظام إدارة المصنع - ERP
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm" onclick="loadData()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </nav>
+
+        <!-- واجهة الرئيسية -->
+        <div id="home-view" class="view-section active card border-0 shadow-sm p-3 rounded-4">
+            <h4 class="text-secondary mb-3">لوحة المؤشرات</h4>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <span class="text-muted small">إجمالي الإنتاج</span>
+                        <h3 class="fw-bold text-primary mb-0" id="prod-val">--</h3>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <span class="text-muted small">كفاءة OEE</span>
+                        <h3 class="fw-bold text-success mb-0" id="oee-val">--</h3>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- المحتوى الرئيسي -->
-        <div id="main-content" class="d-none flex-grow-1 p-3">
-            <nav class="navbar navbar-dark bg-primary rounded-3 shadow-sm mb-3 px-3 d-flex justify-content-between align-items-center">
-                <button type="button" class="brand-btn" onclick="switchView('home-view')">
-                    <i class="fas fa-boxes-stacked ms-2"></i> نظام الإدارة الشامل
-                </button>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="switchView('transactions-view')" title="سجل الحركات">
-                        <i class="fas fa-list-ul"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="loadERPData()" title="تحديث">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-            </nav>
-
-            <!-- واجهة الرئيسية -->
-            <div id="home-view" class="view-section active card border-0 shadow-sm p-3 rounded-4">
-                <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <span class="text-muted small">إجمالي المصروفات</span>
-                            <h3 class="fw-bold text-primary mb-0" id="total-expense">--</h3>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <span class="text-muted small">حركات اليوم</span>
-                            <h3 class="fw-bold text-success mb-0" id="today-trans">--</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 text-center">
-                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="switchView('transactions-view')">
-                        <i class="fas fa-list ms-1"></i> استعراض سجل الحركات التفصيلي
-                    </button>
-                </div>
-            </div>
-
-            <!-- واجهة الحركات -->
-            <div id="transactions-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="text-secondary mb-0">سجل الحركات اليومية</h4>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('home-view')">
-                        <i class="fas fa-home ms-1"></i> الرئيسية
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>البيان</th>
-                                <th>المبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactions-body">
-                            <tr><td colspan="3" class="text-center text-muted py-4">جاري التحميل...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <!-- واجهة أخرى للتنقل المحلي -->
+        <div id="other-view" class="view-section card border-0 shadow-sm p-3 rounded-4">
+            <h4 class="text-secondary mb-3">تفاصيل العمليات</h4>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('home-view')">
+                <i class="fas fa-home ms-1"></i> العودة للرئيسية
+            </button>
         </div>
     </div>
 
     <script>
-        const CONFIG = {
-            API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
-        };
+        const API_URL = "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec";
 
-        async function callGAS(action, payload = {}) {
+        // دالة الاتصال الخلفي الصامت
+        async function callBackend(action) {
             try {
-                const response = await fetch(CONFIG.API_URL, {
+                const response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: action, ...payload }),
-                    redirect: "error"
+                    body: JSON.stringify({ action: action }),
+                    redirect: "error" // يمنع المتصفح من اتباع أي توجيه خارجي نهائياً
                 });
-                
-                const textData = await response.text();
-                
-                if (textData.trim().toLowerCase().startsWith("<!doctype") || textData.trim().toLowerCase().startsWith("<html")) {
-                    console.error("Blocked Google Auth/Redirect HTML response.");
-                    return { status: "error", message: "جلسة العمل تتطلب صلاحية" };
-                }
-                
-                return JSON.parse(textData);
-            } catch (error) {
-                console.error("Communication Error:", error);
-                return { status: "error", message: "فشل الاتصال" };
+                const text = await response.text();
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("Fetch error:", e);
+                return null;
             }
         }
 
+        // التنقل المحلي البحت عبر إخفاء وإظهار أقسام الـ HTML بدون مغادرة الصفحة
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            if(viewId === 'transactions-view') {
-                fetchTransactionsFromGAS();
+        }
+
+        async function loadData() {
+            // مثال على جلب البيانات بدون مغادرة جيت هاب
+            const res = await callBackend("getDashboardData");
+            if (res && res.status === "success" && res.data) {
+                document.getElementById('prod-val').innerText = res.data.todayTransactions || "0";
             }
         }
 
-        async function loadERPData() {
-            const res = await callGAS("getDashboardData");
-            if(res.status === "success" && res.data) {
-                document.getElementById('total-expense').innerText = res.data.totalExpense;
-                document.getElementById('today-trans').innerText = res.data.todayTransactions;
-            }
-        }
+        // منع أي نقرة عشوائية على أي رابط قد يخرج من النطاق
+        document.addEventListener('click', function(e) {
+            let target = e.target.closest('a');
+            if (target) e.preventDefault();
+        });
 
-        async function fetchTransactionsFromGAS() {
-            const res = await callGAS("getTransactionsData");
-            let tbody = document.getElementById('transactions-body');
-            if(res.status === "success" && res.htmlRows) {
-                tbody.innerHTML = res.htmlRows;
-            } else {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">لا توجد حركات مسجلة</td></tr>`;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadERPData();
-            setTimeout(() => {
-                document.getElementById('splash-screen').style.display = 'none';
-                document.getElementById('main-content').classList.remove('d-none');
-            }, 400);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
         });
     </script>
 </body>
