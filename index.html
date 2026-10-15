@@ -68,43 +68,42 @@
     <!-- التطبيق البرمجي الواجهة -->
     <script>
         const CONFIG = {
-            // ضع هنا رابط النشر الخاص بـ Google Apps Script Web App (Exec URL)
-            API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
-        };
+    // رابط الـ Web App الخاص بك في جوجل سكريبت
+    API_URL: "https://script.google.com/macros/s/AKfycbzXx524tqoCw_EiaVxB0hsxcT2i4nnfBiqt7v8mHxYzvymBd9vGsFux8Qeh8CVqBGiKgA/exec"
+};
 
-        const app = {
-            init: async function() {
-                // محاكاة الاتصال وجلب البيانات الأولية من Google Apps Script
-                setTimeout(() => {
-                    document.getElementById('splash-screen').classList.add('d-none');
-                    document.getElementById('main-content').classList.remove('d-none');
-                    this.loadDashboard();
-                }, 1000);
+// دالة الاتصال الموحدة والآمنة (لا تغادر جيت هاب أبداً)
+async function callGAS(action, payload = {}) {
+    try {
+        const response = await fetch(CONFIG.API_URL, {
+            method: "POST",
+            // استخدام text/plain ضروري جداً مع جوجل سكريبت لمنع طلبات الـ OPTIONS المعقدة وكسر الـ CORS
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
             },
-            loadDashboard: function() {
-                document.getElementById('dynamic-view').innerHTML = `
-                    <h4 class="text-secondary mb-3">لوحة المؤشرات الرئيسية</h4>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <span class="text-muted small">إجمالي الصرف</span>
-                                <h3 class="fw-bold text-primary mb-0">--</h3>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <span class="text-muted small">حركات اليوم</span>
-                                <h3 class="fw-bold text-success mb-0">--</h3>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            },
-            refreshData: async function() {
-                alert('تم تحديث البيانات بنجاح');
-            }
-        };
+            body: JSON.stringify({ action: action, ...payload })
+        });
 
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error("Communication Error:", error);
+        return { status: "error", message: "فشل الاتصال بالخادم الداخلي" };
+    }
+}
+
+// مثال على جلب أو إرسال بيانات من واجهة الجيت هاب بسلاسة تامة:
+async function loadERPData() {
+    // إظهار مؤشر تحميل محلي داخل الصفحة دون إعادة تحميل
+    document.getElementById('dynamic-view').innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+    
+    const res = await callGAS("getDashboardData");
+    
+    if(res.status === "success") {
+        // تحديث الواجهة محلياً
+        renderView(res.data);
+    }
+}
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
