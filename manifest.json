@@ -1,7 +1,8 @@
 {
-  "name": "DrIslam ERP ",
-  "short_name": "ERP System",
+  "name": "EIPI Factory ERP",
+  "short_name": "EIPI ERP",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0d6efd",
   "theme_color": "#0d6efd",
