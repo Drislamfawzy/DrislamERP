@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* شريط حالة الاتصال */
         #network-status { display: none; background: #dc2626; color: white; text-align: center; padding: 5px; font-family: 'Cairo'; font-weight: 700; font-size: 0.85rem; position: sticky; top: 0; z-index: 9999; }
         #network-status.offline { display: block; }
         #network-status.syncing { display: block; background: #d97706; }
@@ -19,10 +18,8 @@
 </head>
 <body>
 
-    <!-- شريط حالة الإنترنت -->
     <div id="network-status">أنت غير متصل بالإنترنت. سيتم حفظ البيانات محلياً والمزامنة لاحقاً.</div>
 
-    <!-- حاوية عرض الصفحات -->
     <div id="app-content">
         <h2 style="text-align: center; color: #0f172a; margin-top: 50px;">
             <i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل النظام...
@@ -30,8 +27,8 @@
     </div>
 
     <script>
-        // --- 1. إعدادات الـ API (استبدل هذا الرابط برابط نشر Google Apps Script Web App الخاص بك) ---
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxkrVWDErmUpGlG4YN6K1z8psNQPsv3Fphko0BTYOvzvT5KAp3AeFOI7Ne0uiGPkTUPHg/exec";
+        // --- 1. إعدادات الـ API (ضع رابط جوجل سكريبت هنا) ---
+        const GAS_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
 
         // --- 2. تسجيل Service Worker ---
         if ('serviceWorker' in navigator) {
@@ -42,7 +39,7 @@
             });
         }
 
-        // --- 3. نظام المزامنة الذكي (Offline Cache & Background Sync) ---
+        // --- 3. نظام المزامنة الذكي ---
         const networkStatus = document.getElementById('network-status');
         
         window.addEventListener('online', () => {
@@ -76,13 +73,12 @@
                         method: 'POST',
                         body: JSON.stringify({ action: queue[i].action, data: queue[i].payload })
                     });
-                    // إزالة من الطابور بعد النجاح
                     queue.splice(i, 1);
                     i--; 
                     localStorage.setItem('erp_offline_queue', JSON.stringify(queue));
                 } catch (e) {
                     console.error("فشل مزامنة عنصر:", e);
-                    break; // التوقف في حال الفشل والمحاولة لاحقاً
+                    break;
                 }
             }
             
@@ -112,12 +108,10 @@
                     
                     if (result.status === "success") {
                         if(onSuccess) {
-                            // التوجيه الذكي للمخرجات لتتوافق مع كل الشاشات
                             let output = result;
                             if (result.data !== undefined) output = result.data;
                             else if (result.message !== undefined) output = result.message;
                             
-                            // استثناء خاص لشاشة الداشبورد التي تنتظر كائن كامل يحتوي على metrics
                             if (action === 'getDashboardMetrics_V3' || action === 'getComprehensiveReportsData') {
                                 output = result; 
                             }
@@ -134,7 +128,7 @@
             }
         };
 
-        // --- 5. نظام التوجيه (Router) بدون إعادة تحميل الصفحة ---
+        // --- 5. نظام التوجيه (Router) ---
         function navigateTo(pageName) {
             window.location.hash = pageName;
         }
@@ -143,25 +137,26 @@
             const hash = window.location.hash.substring(1) || 'Home';
             const contentDiv = document.getElementById('app-content');
             
-            // في التطبيق الفعلي، بدلاً من تضمين الملفات، نستخدم fetch لجلب مكونات HTML 
-            // لكن لسهولة التطبيق يمكنك دمج الـ HTML الخاص بكل صفحة هنا أو جلبه من مجلد محلي
             try {
-                // افتراض أنك حولت الشاشات إلى ملفات HTML في مجلد /views
                 const response = await fetch(`./views/${hash}.html`); 
                 if (response.ok) {
                     const html = await response.text();
                     contentDiv.innerHTML = html;
                     executePageScripts(contentDiv);
+                    
+                    // --- الحل السحري لتشغيل الشاشات بدون تعديلها ---
+                    setTimeout(() => {
+                        document.dispatchEvent(new Event('DOMContentLoaded'));
+                    }, 50);
+
                 } else {
                     contentDiv.innerHTML = "<h3 style='text-align:center; color:red;'>الصفحة غير موجودة</h3>";
                 }
             } catch(e) {
-                // الكاش الذكي سيعرض الصفحة المخبأة إذا كان المستخدم أوفلاين
                 console.error("Router error:", e);
             }
         }
 
-        // دالة لتشغيل الجافاسكريبت المدمج داخل الصفحات المحملة ديناميكياً
         function executePageScripts(container) {
             const scripts = container.querySelectorAll('script');
             scripts.forEach(script => {
@@ -179,7 +174,7 @@
         window.addEventListener('hashchange', renderPage);
         window.addEventListener('load', renderPage);
 
-        // تصحيح دوال العودة للرئيسية عالمياً
+        // دالة العودة للرئيسية تعمل على كل الشاشات
         window.goHome = function(e) {
             if(e) e.preventDefault();
             navigateTo('Home');
