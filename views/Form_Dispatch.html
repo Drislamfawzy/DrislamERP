@@ -347,13 +347,9 @@
       }
 
       function goHome(e) {
-        if (e) e.preventDefault();
-        if (BASE_URL && BASE_URL.startsWith("http")) {
-          window.top.location.href = `${BASE_URL}?page=Home`;
-        } else {
-          const current = window.location.href.split("?")[0];
-          window.top.location.href = `${current}?page=Home`;
-        }
+    if(e) e.preventDefault();
+    window.location.hash = 'Home';
+}
       }
 
       function addRow() {
