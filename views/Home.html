@@ -280,13 +280,8 @@
         "<?= typeof scriptUrl !== 'undefined' ? scriptUrl : '' ?>";
 
       function navigateTo(viewName) {
-        if (BASE_URL && BASE_URL.startsWith("http")) {
-          window.top.location.href = `${BASE_URL}?page=${viewName}`;
-        } else {
-          const current = window.location.href.split("?")[0];
-          window.top.location.href = `${current}?page=${viewName}`;
-        }
-      }
+    window.location.hash = viewName;
+}
     </script>
   </body>
 </html>
