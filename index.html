@@ -109,10 +109,23 @@
                     });
                     
                     const result = await response.json();
+                    
                     if (result.status === "success") {
-                        if(onSuccess) onSuccess(result);
+                        if(onSuccess) {
+                            // التوجيه الذكي للمخرجات لتتوافق مع كل الشاشات
+                            let output = result;
+                            if (result.data !== undefined) output = result.data;
+                            else if (result.message !== undefined) output = result.message;
+                            
+                            // استثناء خاص لشاشة الداشبورد التي تنتظر كائن كامل يحتوي على metrics
+                            if (action === 'getDashboardMetrics_V3' || action === 'getComprehensiveReportsData') {
+                                output = result; 
+                            }
+                            
+                            onSuccess(output);
+                        }
                     } else {
-                        if(onFailure) onFailure(result.message);
+                        if(onFailure) onFailure(result.message || "حدث خطأ غير معروف");
                     }
                 } catch (error) {
                     saveToOfflineQueue(action, payload);
